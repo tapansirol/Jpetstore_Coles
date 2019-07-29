@@ -85,4 +85,4 @@ $ ./mvnw test -P itest
 > * [Two tests are failed on The WebSphere Liberty](https://github.com/mybatis/jpetstore-6/issues/159).
 
 #Updated
-#Coles Demo - JPET-28-Update
+#Coles Demo - JPET-29-Updat9
