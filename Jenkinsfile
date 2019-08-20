@@ -1,7 +1,7 @@
 node{
 	currentBuild.displayName = "1.${BUILD_NUMBER}"
 	def GIT_COMMIT
-  stage ('cloning the repository'){
+  stage ('Cloning the repository'){
 	  
       def scm = git 'https://github.com/tapansirol/Jpetstore_Coles'
 	  GIT_COMMIT = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
