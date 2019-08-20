@@ -1,9 +1,9 @@
-node{
+node {
 	currentBuild.displayName = "1.${BUILD_NUMBER}"
 	def GIT_COMMIT
   stage ('cloning the repository'){
 	  
-      def scm = git 'https://github.com/tapansirol/Jpetstore_Coles'
+      def scm = git 'https://github.com/tapansirol/Jpetstore-parker'
 	  GIT_COMMIT = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
 	  echo "AAAA ${GIT_COMMIT}"
 	  //echo "BBBB ${scm}"
@@ -11,27 +11,44 @@ node{
 	   //echo "**** ${GIT_COMMIT}"
 	  
   }
+	
+ 
   stage ('Build') {
       withMaven(jdk: 'JDK_local', maven: 'MVN_Local') {
       sh 'mvn clean package'
 	      echo "**** ${GIT_COMMIT}"
+	//step($class: 'UploadBuild', tenantId: "5ade13625558f2c6688d15ce", revision: "${GIT_COMMIT}", appName: "JPetStore", requestor: "admin", id: "${newComponentVersionId}" )
+	
+	     
     }
   }
+  
+
+  stage ('Cucumber'){
+	  withMaven(jdk: 'JDK_local', maven: 'MVN_Local') {
+		  sh 'mvn test -Dtest=Runner'    
+	  }
+		cucumber buildStatus: "Success",
+			fileIncludePattern: "**/cucumber.json",
+			jsonReportDirectory: 'target'
+
+  }
+
 	stage('SonarQube Analysis'){
-		sleep 10
-	//	def mvnHome = tool name : 'MVN_Local', type:'maven'
-	//	withSonarQubeEnv('sonar-server'){
-	//		 "SONAR_USER_HOME=/opt/bitnami/jenkins/.sonar ${mvnHome}/bin/mvn sonar:sonar"
-	//		sh  "${mvnHome}/bin/mvn sonar:sonar"
-	//	}
+		def mvnHome = tool name : 'MVN_Local', type:'maven'
+		withSonarQubeEnv('sonar-server'){
+			 "SONAR_USER_HOME=/opt/bitnami/jenkins/.sonar ${mvnHome}/bin/mvn sonar:sonar"
+			sh  "${mvnHome}/bin/mvn sonar:sonar -Dsonar.projectKey=jpetstore -Dsonar.projectName=JPetStore"
+		}
 	}
+	
+	
 stage ("Appscan"){
-	sleep 40
-	//appscan application: '17969f05-19dd-4143-b7e2-c52a3336db18', credentials: 'Credential for ASOC', failBuild: true, failureConditions: [failure_condition(failureType: 'high', threshold: 20)], name: 'test_07012019', scanner: static_analyzer(hasOptions: false, target: '/var/jenkins_home/jobs/jpetstore'), type: 'Static Analyzer', wait: true
-	//appscan application: '46265443-de81-4bb6-b496-61370209d1df', credentials: 'HCL ASOC Credentials', failBuild: true, failureConditions: [failure_condition(failureType: 'high', threshold: 20)], name: '46265443-de81-4bb6-b496-61370209d1df7394', scanner: static_analyzer(hasOptions: false, target: '/var/jenkins_home/jobs/jpetstore'), type: 'Static Analyzer'
-	appscan application: '84963f4f-0cf4-4262-9afe-3bd7c0ec3942', credentials: 'HCL ASoC Dev', failBuild: true, failureConditions: [failure_condition(failureType: 'high', threshold: 20)], name: '84963f4f-0cf4-4262-9afe-3bd7c0ec39428270', scanner: static_analyzer(hasOptions: false, target: '/var/jenkins_home/jobs/jpetstore'), type: 'Static Analyzer'
+	//sleep 40
+	//appscan application: '84963f4f-0cf4-4262-9afe-3bd7c0ec3942', credentials: 'Credential for ASOC', failBuild: true, failureConditions: [failure_condition(failureType: 'high', threshold: 100)], name: '84963f4f-0cf4-4262-9afe-3bd7c0ec39429048', scanner: static_analyzer(hasOptions: false, target: '/var/jenkins_home/jobs/jpetstore'), type: 'Static Analyzer', wait: true
  }
   stage('Publish Artificats to UCD'){
+	  
    step([$class: 'UCDeployPublisher',
         siteName: 'ucd-server',
         component: [
@@ -46,7 +63,7 @@ stage ("Appscan"){
                 $class: 'com.urbancode.jenkins.plugins.ucdeploy.DeliveryHelper$Push',
                 pushVersion: '1.${BUILD_NUMBER}',
                 //baseDir: '/var/jenkins_home/workspace/JPetStore/target',
-		 baseDir: '/var/jenkins_home/workspace/jpetstore/target',
+		    baseDir: '/var/jenkins_home/workspace/${JOB_NAME}/target',
                 fileIncludePatterns: '*.war',
                 fileExcludePatterns: '',
                // pushProperties: 'jenkins.server=Jenkins-app\njenkins.reviewed=false',
@@ -54,7 +71,14 @@ stage ("Appscan"){
             ]
         ]
     ])
-
+	  
+		//sh 'env > env.txt'
+	//	readFile('env.txt').split("\r?\n").each {
+	//	println it
+	//	}
+	echo "(*****)"
+	  echo "${UUID}"
+	
 	  echo "Demo1234 ${JpetComponent_VersionId}"
 	  def newComponentVersionId = "${JpetComponent_VersionId}"
 	  step($class: 'UploadBuild', tenantId: "5ade13625558f2c6688d15ce", revision: "${GIT_COMMIT}", appName: "JPetStore", requestor: "admin", id: "${newComponentVersionId}" )
@@ -76,7 +100,8 @@ stage ("Appscan"){
 stage ('HCL One Test') {
 	sleep 25
 	// echo 'Executing HCL One test ... '
-	// sh '/var/jenkins_home/onetest/create-and-execute-workspace.sh'
+	//sh '/var/jenkins_home/onetest/hcl-onetest-command.sh'
  }
 
 }
+
