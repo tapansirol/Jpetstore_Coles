@@ -1,5 +1,5 @@
 node {
-	currentBuild.displayName = "1.${BUILD_NUMBER}"
+	currentBuild.displayName = "v1.${BUILD_NUMBER}"
 	def GIT_COMMIT
   stage ('cloning the repository'){
 	  
@@ -61,7 +61,7 @@ stage ("Appscan"){
             ],
             delivery: [
                 $class: 'com.urbancode.jenkins.plugins.ucdeploy.DeliveryHelper$Push',
-                pushVersion: '1.${BUILD_NUMBER}',
+                pushVersion: 'v1.${BUILD_NUMBER}',
                 //baseDir: '/var/jenkins_home/workspace/JPetStore/target',
 		    baseDir: '/var/jenkins_home/workspace/${JOB_NAME}/target',
                 fileIncludePatterns: '*.war',
@@ -86,14 +86,14 @@ stage ("Appscan"){
 	sleep 25
 	  step([$class: 'UCDeployPublisher',
 		deploy: [ createSnapshot: [deployWithSnapshot: true, 
-			 snapshotName: "1.${BUILD_NUMBER}"],
+			 snapshotName: "v1.${BUILD_NUMBER}"],
 			 deployApp: 'JPetStore', 
 			 deployDesc: 'Requested from Jenkins', 
 			 deployEnv: 'JPetStore_Dev', 
 			 deployOnlyChanged: false, 
 			 deployProc: 'Deploy-JPetStore', 
 			 deployReqProps: '', 
-			 deployVersions: "JpetComponent:1.${BUILD_NUMBER}"], 
+			 deployVersions: "JpetComponent:v1.${BUILD_NUMBER}"], 
 		siteName: 'ucd-server'])
  }
  
